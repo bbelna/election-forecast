@@ -1,0 +1,1 @@
+export type StateProbabilities = { [state: string]: number };

@@ -1,4 +1,9 @@
 export class ElectoralVotes {
-  democrat: number = 226;
-  republican: number = 219;
+  democrat: number;
+  republican: number;
+
+  constructor(democrat: number, republican: number) {
+    this.democrat = democrat;
+    this.republican = republican;
+  }
 }

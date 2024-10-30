@@ -11,11 +11,13 @@ import { Json } from '../types/json';
 import { StateProbabilities } from '../types/state-probabilities';
 import { dateStringToDate, formatDateToYYYYMMDD } from '../../lib';
 import { DailyChange } from '../models/daily-change';
+import { ElectoralVotes } from '../models/electoral-votes';
 
 @Injectable({ providedIn: 'root' })
 export class ElectoralMapService {
   protected evsJson: Json<number> = {};
   protected stateProbabilitiesJson: Json<StateProbabilities> = {};
+  protected stateData: Map<string, StateData> = new Map();
   protected geoData: any;
 
   constructor(protected appService: AppService) { }
@@ -46,6 +48,27 @@ export class ElectoralMapService {
     });
   }
 
+  getTotalElectoralVotes(): ElectoralVotes {
+    const evConfig = this.appService.getConfig().evConfig;
+    const evStates = evConfig.evStates;
+    let evDem = evConfig.baseEvDem;
+    let evRep = evConfig.baseEvRep;
+
+    for (const state of Object.keys(evStates)) {
+      const stateData = this.getStateData(state);
+      if (stateData.rating !== StateRating.TossUp) {
+        const margin = stateData.probabilities.getMargin();
+        if (margin > 0) {
+          evDem += evStates[state];
+        } else {
+          evRep += evStates[state];
+        }
+      }
+    }
+
+    return new ElectoralVotes(evDem, evRep);
+  }
+
   getStateData(state: string, date: Date = new Date()): StateData {
     const probabilities = this.getProbabilities(state, date);
     const rating = this.getStateRating(state);
@@ -54,13 +77,16 @@ export class ElectoralMapService {
     const evs = this.getElectoralVotes(state);
     const stateData = { name: state, probabilities, rating, color, date, change, evs };
 
+    this.stateData.set(state, stateData);
     return stateData;
   }
 
   getStateRating(state: string): StateRating {
     const probabilities = this.getProbabilities(state);
     const margin = probabilities.getMargin();
-    const ratingMargins = this.appService.getConfig().ratingMargins;
+    const config = this.appService.getConfig();
+    const ratingMargins = config.ratingMargins;
+    const enableTilts = config.tilts;
 
     if (margin >= ratingMargins.solid) {
       return StateRating.SolidD;
@@ -68,7 +94,7 @@ export class ElectoralMapService {
       return StateRating.LikelyD;
     } else if (margin >= ratingMargins.lean) {
       return StateRating.LeanD;
-    } else if (margin >= ratingMargins.tilt) {
+    } else if (margin >= ratingMargins.tilt && enableTilts) {
       return StateRating.TiltD;
     } else if (margin <= -ratingMargins.solid) {
       return StateRating.SolidR;
@@ -76,7 +102,7 @@ export class ElectoralMapService {
       return StateRating.LikelyR;
     } else if (margin <= -ratingMargins.lean) {
       return StateRating.LeanR;
-    } else if (margin <= -ratingMargins.tilt) {
+    } else if (margin <= -ratingMargins.tilt && enableTilts) {
       return StateRating.TiltR;
     } else {
       return StateRating.TossUp;
@@ -136,7 +162,7 @@ export class ElectoralMapService {
 
       const diff = latestProbs.getMargin() - prevProbs.getMargin();
       const text = diff === 0 
-        ? 'No Change'
+        ? 'None'
         : diff > 0
           ? `D +${diff.toFixed(1)}%`
           : `R +${-diff.toFixed(1)}%`;
@@ -173,7 +199,7 @@ export class ElectoralMapService {
       + `<span class="${rClass} r-text">${this.getCandidate(Party.Republican)}: ${data.probabilities.republican}%</span><br/>`;
 
     if (data.change?.text) {
-      let changeClass = 'tossup-text';
+      let changeClass = '';
       if (data.change?.advantage) {
         changeClass = data.change?.advantage === Party.Democrat ? 'd-text' : 'r-text';
       }

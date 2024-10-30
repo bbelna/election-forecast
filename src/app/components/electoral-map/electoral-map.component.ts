@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 
 import { Component, OnInit } from '@angular/core';
 import { ElectoralMapService } from '../../services/electoral-map.service';
+import { ElectoralVotes } from '../../models/electoral-votes';
 
 @Component({
   selector: 'app-electoral-map',
@@ -10,6 +11,8 @@ import { ElectoralMapService } from '../../services/electoral-map.service';
   styleUrls: ['./electoral-map.component.scss']
 })
 export class ElectoralMapComponent implements OnInit {
+  electoralVotes: ElectoralVotes = new ElectoralVotes(0, 0);
+
   private svg: any;
   private width: number = 960;
   private height: number = 600;
@@ -22,6 +25,7 @@ export class ElectoralMapComponent implements OnInit {
     this.electoralMapService.load().then(() => {
       this.createSvg();
       this.drawMap();
+      this.electoralVotes = this.electoralMapService.getTotalElectoralVotes();
     });
   }
 
@@ -49,7 +53,7 @@ export class ElectoralMapComponent implements OnInit {
       .append('path')
       .attr('d', pathGenerator)
       .attr('fill', (d: any) => this.electoralMapService.getColor(d.properties.name))
-      .attr('stroke', '#fff')
+      .attr('stroke', '#000')
       .attr('stroke-width', 1)
       .each((d: any, i: number, nodes: SVGGElement[]) => {
         const element = nodes[i];

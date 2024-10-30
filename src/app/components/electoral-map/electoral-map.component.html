@@ -1,9 +1,9 @@
 <div class="ev">
-  <span class="d-ev">HARRIS/WALTZ 241</span>
+  <span class="d-ev" [ngClass]="{'winner': electoralVotes.democrat >= 270}">HARRIS/WALTZ {{ electoralVotes.democrat }}</span>
   |
-  <span class="r-ev">TRUMP/VANCE 262</span>
+  <span class="r-ev" [ngClass]="{'winner': electoralVotes.republican >= 270}">TRUMP/VANCE {{ electoralVotes.republican }}</span>
 </div>
-<div style="margin:auto; text-align: center; display: flex; justify-content: center;">
+<div style="text-align: center; display: flex; justify-content: center; margin-top: -80px">
   <figure id="map"></figure>
   <div id="electoral-votes" class="electoral-box">
   </div>

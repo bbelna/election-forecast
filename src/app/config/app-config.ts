@@ -1,10 +1,14 @@
-export const appConfig = {
+import { AppConfig } from '../models/config/app-config';
+
+export const appConfig: AppConfig = {
+  solidOnly: false,
   tilts: true,
+  tossups: true,
   ratingMargins: {
-    solid: 70,
+    solid: 65,
     likely: 40,
-    lean: 30,
-    tilt: 20
+    lean: 20,
+    tilt: 10
   },
   candidates: {
     democrat: 'Harris/Waltz',
@@ -25,5 +29,16 @@ export const appConfig = {
       'Texas': 40,
       'Minnesota': 10,
     }
+  },
+  mapColors: {
+    solidD: '#0033ff',
+    likelyD: '#5274fa',
+    leanD: '#9cafff',
+    tiltD: '#d2dafc',
+    solidR: '#f5020f',
+    likelyR: '#ff666e',
+    leanR: '#fcaeb2',
+    tiltR: '#ffcfd7',
+    tossup: '#ffc403',
   }
 };

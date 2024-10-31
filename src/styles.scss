@@ -1,5 +1,6 @@
 body {
-  font-family: 'Helvetica Neue', sans-serif;
+  margin: 0;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
 .r-text {
@@ -21,3 +22,8 @@ body {
 .winner {
   font-weight: bold;
 }
+
+.text-center {
+  text-align: center;
+}
+

@@ -1,10 +1,69 @@
-<div class="ev">
-  <span class="d-ev" [ngClass]="{'winner': electoralVotes.democrat >= 270}">HARRIS/WALTZ {{ electoralVotes.democrat }}</span>
-  |
-  <span class="r-ev" [ngClass]="{'winner': electoralVotes.republican >= 270}">TRUMP/VANCE {{ electoralVotes.republican }}</span>
-</div>
-<div style="text-align: center; display: flex; justify-content: center; margin-top: -80px">
-  <figure id="map"></figure>
-  <div id="electoral-votes" class="electoral-box">
+<div class="em-component-container">
+  <div class="ev">
+    <span class="d-ev" [ngClass]="{'winner': electoralVotes.democrat >= 270}">
+      {{ candidates.democrat }} {{ electoralVotes.democrat || '---' }}
+    </span>
+    <span class="separator">-</span>
+    <span class="r-ev" [ngClass]="{'winner': electoralVotes.republican >= 270}">
+      {{ candidates.republican }} {{ electoralVotes.republican || '---' }}
+    </span>
+  </div>
+  <div class="ev-probabilities">
+    <div>Electoral College:</div>
+    <span class="d-ev" [ngClass]="{'winner': probabilities.electoralCollege > 50}">
+      {{ probabilities.electoralCollege || '--' }}%
+    </span>
+    <span class="separator-sm">-</span>
+    <span class="r-ev" [ngClass]="{'winner': probabilities.electoralCollege < 50}">
+      {{ (100 - probabilities.electoralCollege) || '--' }}%
+    </span>
+  </div>
+  <div class="pv-probabilities">
+    <div>Popular Vote:</div>
+    <span class="d-ev" [ngClass]="{'winner': probabilities.electoralCollege > 50}">
+      {{ probabilities.popularVote || '--' }}%
+    </span>
+    <span class="separator-sm">-</span>
+    <span class="r-ev" [ngClass]="{'winner': probabilities.electoralCollege < 50}">
+      {{ (100 - probabilities.popularVote) || '--' }}%
+    </span>
+  </div>
+  <div class="date-selector">
+    
+  </div>
+  <div class="options-container">
+    <mat-form-field appearance="fill" class="compact-dropdown">
+      <mat-label>Date</mat-label>
+      <mat-select [(value)]="selectedDate" (valueChange)="update()">
+        <mat-option *ngFor="let option of availableDates" [value]="option">
+          {{ option.getValueWithSeparator('-') }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-checkbox
+      [(ngModel)]="mapOptions.solidOnly"
+      (change)="updateMapOptions('solidOnly', $event)"
+    >
+      Solid Only
+    </mat-checkbox>
+    <mat-checkbox
+      [(ngModel)]="mapOptions.tilts"
+      [disabled]="mapOptions.solidOnly"
+      (change)="updateMapOptions('tilts', $event)"
+    >
+      Tilts
+    </mat-checkbox>
+    <mat-checkbox
+      [(ngModel)]="mapOptions.tossups"
+      [disabled]="mapOptions.solidOnly"
+      (change)="updateMapOptions('tossups', $event)"
+    >
+      Tossups
+    </mat-checkbox>
+  </div>
+  <div class="map-container">
+    <figure id="map"></figure>
+    <div id="electoral-votes" class="electoral-box">
+    </div>
   </div>
 </div>

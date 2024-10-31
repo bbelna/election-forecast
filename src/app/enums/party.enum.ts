@@ -1,4 +1,5 @@
 export enum Party {
   Democrat = 'Democrat',
-  Republican = 'Republican'
+  Republican = 'Republican',
+  None = 'None',
 }

@@ -6,7 +6,75 @@
   color: red;
 }
 
-.ev {
+.ev, .ev-probabilities, .pv-probabilities {
   text-align: center;
-  font-size: 40px;
+  font-size: 24px; /* Adjust as needed for .ev-probabilities */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Add spacing between elements */
+}
+
+.date-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.separator {
+  display: inline-block;
+  margin: 0 10px; /* Adjust to control spacing around the separator */
+  font-weight: bold;
+}
+
+.separator-sm {
+  display: inline-block;
+  margin: 0 0px; /* Adjust to control spacing around the separator */
+  font-weight: bold;
+}
+
+.ev-probabilities {
+  font-size: 14px;
+}
+
+.pv-probabilities {
+  font-size: 14px;
+}
+
+.options-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.options-container mat-checkbox {
+  margin-top: -12px;
+}
+
+.map-container {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  margin-top: -90px;
+}
+
+.em-component-container {
+  margin-top: 1rem;
+}
+
+::ng-deep .compact-dropdown .mat-select-trigger {
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  font-size: 12px !important; /* Adjust font size for smaller text */
+}
+
+::ng-deep .compact-dropdown .mat-select {
+  min-height: 30px !important; /* Adjust to reduce the dropdown height */
+}
+
+::ng-deep .compact-dropdown .mat-option {
+  height: 30px !important; /* Adjust height of each option in the dropdown */
+  font-size: 12px !important; /* Adjust font size of options */
+  line-height: 1 !important; /* Adjust line height to reduce space within options */
 }

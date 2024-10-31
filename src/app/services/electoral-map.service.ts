@@ -1,64 +1,83 @@
 import * as d3 from 'd3';
 
 import { stateGeoJsons } from '../const/state-geo-jsons';
-import { ElectoralProbabilities } from '../models/electoral-probabilities';
+import { StateProbabilities } from '../models/state-probabilities';
 import { StateRating } from '../enums/state-rating.enum';
-import { AppService } from '../app.service';
 import { Party } from '../enums/party.enum';
 import { Injectable } from '@angular/core';
 import { StateData } from '../models/state-data';
 import { Json } from '../types/json';
-import { StateProbabilities } from '../types/state-probabilities';
-import { dateStringToDate, formatDateToYYYYMMDD } from '../../lib';
 import { DailyChange } from '../models/daily-change';
 import { ElectoralVotes } from '../models/electoral-votes';
+import { ConfigService } from './config.service';
+import { DateString } from '../types/date-string';
+import { StateDataMap } from '../types/state-data-map';
+import { StateDataKey } from '../types/state-data-key';
+import { ElectoralMapOptionsService } from './electoral-map-options.service';
+import { Probabilities } from '../types/probabilities';
+import { ProbabilitiesJson } from '../types/probabilities-json';
 
 @Injectable({ providedIn: 'root' })
 export class ElectoralMapService {
-  protected evsJson: Json<number> = {};
-  protected stateProbabilitiesJson: Json<StateProbabilities> = {};
-  protected stateData: Map<string, StateData> = new Map();
+  /**
+   * Electoral vote data.
+   */
+  protected evs: Json<number> = {};
+
+  /**
+   * Probability data.
+   */
+  protected probabilities: Json<Probabilities> = {};
+
+  /**
+   * State data cache.
+   */
+  protected stateData: StateDataMap = new Map();
+
+  /**
+   * GeoJSON data for all states.
+   */
   protected geoData: any;
 
-  constructor(protected appService: AppService) { }
+  constructor(
+    protected configService: ConfigService,
+    protected electoralMapOptionsService: ElectoralMapOptionsService,
+  ) { }
 
+  /**
+   * Loads all data required for the electoral map service.
+   */
   async load(): Promise<void> {
     await this.loadJsonData();
     await this.loadGeoData();
   }
 
+  /**
+   * Retrieves the active GeoJSON data for all states.
+   * @returns {any} The active GeoJSON data for all states.
+   */
   getGeoData(): any {
     return this.geoData;
   }
 
-  async loadJsonData(): Promise<void> {
-    await this.getElectoralVotesJson();
-    await this.getStateProbabilitiesJson();
-  }
-
-  loadGeoData(): Promise<any> {
-    const promises = stateGeoJsons.map(state => d3.json(`assets/json/geo/${state}`));
-
-    return Promise.all(promises).then((data) => {
-      const allFeatures = data.flatMap((stateData: any) => {
-        return stateData.type === 'FeatureCollection' ? stateData.features : [stateData];
-      });
-      this.geoData = allFeatures;
-      return allFeatures;
-    });
-  }
-
-  getTotalElectoralVotes(): ElectoralVotes {
-    const evConfig = this.appService.getConfig().evConfig;
+  /**
+   * Retrieves the electoral vote forecast for the given date.
+   * @param {DateString} date The date to retrieve the electoral vote forecast
+   * for.
+   * @returns {ElectoralVotes} The total electoral vote forecast for the
+   * current date.
+   */
+  getTotalElectoralVotes(date: DateString): ElectoralVotes {
+    const evConfig = this.configService.getElectoralVoteConfig();
     const evStates = evConfig.evStates;
     let evDem = evConfig.baseEvDem;
     let evRep = evConfig.baseEvRep;
 
     for (const state of Object.keys(evStates)) {
-      const stateData = this.getStateData(state);
+      const stateData = this.getStateData(state, date);
       if (stateData.rating !== StateRating.TossUp) {
-        const margin = stateData.probabilities.getMargin();
-        if (margin > 0) {
+        const winner = stateData.getWinningParty();
+        if (winner === Party.Democrat) {
           evDem += evStates[state];
         } else {
           evRep += evStates[state];
@@ -69,24 +88,53 @@ export class ElectoralMapService {
     return new ElectoralVotes(evDem, evRep);
   }
 
-  getStateData(state: string, date: Date = new Date()): StateData {
-    const probabilities = this.getProbabilities(state, date);
-    const rating = this.getStateRating(state);
-    const color = this.getColor(state);
-    const change = this.getDailyChange(state);
-    const evs = this.getElectoralVotes(state);
-    const stateData = { name: state, probabilities, rating, color, date, change, evs };
+  /**
+   * Retrieves state data for the given state and date.
+   * @param {string} state State to get data for.
+   * @param {DateString} date Date to get data for.
+   * @returns {StateData} `StateData` instance containing the data for the given
+   * state on the given date.
+   */
+  getStateData(state: string, date: DateString): StateData {
+    const stateDataKey = new StateDataKey(state, date);
+    if (this.stateData.has(stateDataKey)) {
+      return this.stateData.get(stateDataKey)!;
+    }
 
-    this.stateData.set(state, stateData);
+    const probabilities = this.getStateProbabilities(state, date);
+    const rating = this.getStateRating(state, date);
+    const color = this.getColor(state, date);
+    const change = this.getDailyChange(state, date);
+    const evs = this.getElectoralVotes(state);
+
+    const stateData = new StateData(
+      state,
+      probabilities.asOf,
+      evs,
+      change,
+      probabilities,
+      rating,
+      color
+    );
+
+    this.stateData.set(stateDataKey, stateData);
+
     return stateData;
   }
 
-  getStateRating(state: string): StateRating {
-    const probabilities = this.getProbabilities(state);
+  /**
+   * Retrieves the rating for a given state on a given date.
+   * @param {string} state State to get rating for.
+   * @param {DateString} date Date to get the rating for.
+   * @returns {StateRating} The rating for the given state on the given date.
+   */
+  getStateRating(state: string, date: DateString): StateRating {
+    const probabilities = this.getStateProbabilities(state, date);
     const margin = probabilities.getMargin();
-    const config = this.appService.getConfig();
-    const ratingMargins = config.ratingMargins;
-    const enableTilts = config.tilts;
+    const ratingMargins = this.configService.getRatingMargins();
+    const mapOptions = this.electoralMapOptionsService.get();
+    const tilts = mapOptions.tilts;
+    const tossups = mapOptions.tossups;
 
     if (margin >= ratingMargins.solid) {
       return StateRating.SolidD;
@@ -94,7 +142,7 @@ export class ElectoralMapService {
       return StateRating.LikelyD;
     } else if (margin >= ratingMargins.lean) {
       return StateRating.LeanD;
-    } else if (margin >= ratingMargins.tilt && enableTilts) {
+    } else if (margin >= ratingMargins.tilt && tilts) {
       return StateRating.TiltD;
     } else if (margin <= -ratingMargins.solid) {
       return StateRating.SolidR;
@@ -102,65 +150,124 @@ export class ElectoralMapService {
       return StateRating.LikelyR;
     } else if (margin <= -ratingMargins.lean) {
       return StateRating.LeanR;
-    } else if (margin <= -ratingMargins.tilt && enableTilts) {
+    } else if (margin <= -ratingMargins.tilt && tilts) {
       return StateRating.TiltR;
     } else {
-      return StateRating.TossUp;
+      if (tossups || margin === 0) {
+        return StateRating.TossUp;
+      } else if (margin > 0) {
+        return tilts ? StateRating.TiltD : StateRating.LeanD;
+      } else {
+        return tilts ? StateRating.TiltR : StateRating.LeanR;
+      }
     }
   }
 
-  getAvailableDateStrings(): string[] {
-    return Object.keys(this.stateProbabilitiesJson)
-      .sort((a, b) => Number(b) - Number(a));
+  /**
+   * Retrieves all `DateString` instances available in the state probabilities.
+   * @returns {DateString[]} All available date strings in the state
+   * probabilities.
+   */
+  getAvailableDateStrings(): DateString[] {
+    return Object.keys(this.probabilities)
+      .sort((a, b) => Number(b) - Number(a))
+      .map(dateString => new DateString(dateString));
   }
 
-  getAvailableStatesForDate(dateString: string): string[] {
-    const probs = this.stateProbabilitiesJson[dateString];
-    return probs ? Object.keys(probs) : [];
+  /**
+   * Retrieves all states with probability data on the given date.
+   * @param {DateString} date Date to retrieve available states for. 
+   * @returns {string[]} List of states with probability data on the given date.
+   */
+  getAvailableStatesForDate(date: DateString): string[] {
+    const probabilities = this.probabilities[date.toString()].states;
+    return probabilities ? Object.keys(probabilities) : [];
   }
 
-  isStateAvailableForDate(state: string, dateString: string): boolean {
-    return this.getAvailableStatesForDate(dateString).indexOf(state) >= 0;
+  /**
+   * Checks if a given state has probability data available for a given date.
+   * @param {string} state The state to check.
+   * @param {DateString} date The date to check.
+   * @returns Whether the state has probability data available for the given
+   * date.
+   */
+  isStateAvailableForDate(state: string, date: DateString): boolean {
+    return this.getAvailableStatesForDate(date).indexOf(state) >= 0;
   }
 
-  getLatestDateStringForState(state: string, latest: Date = new Date()): string {
+  /**
+   * Retrieves the latest date string for which a given state has data.
+   * @param {string} state The state to retrieve the latest date string for.
+   * @param {Date} latest Optional, defaults to the current date. The latest
+   * date to consider. Any date strings after this date will be ignored.
+   * @returns {string} The latest date string available for the given state.
+   * Returns `undefined` if no data is available for the state.
+   */
+  getLatestDateStringForState(
+    state: string,
+    latest: DateString = new DateString()
+  ): DateString | undefined {
     const dateStrings = this.getAvailableDateStrings();
     for (const dateString of dateStrings) {
       if (this.isStateAvailableForDate(state, dateString)
-       && dateStringToDate(dateString) <= latest) {
+       && dateString.asDate() <= latest.asDate()) {
         return dateString;
       }
     }
-    return '';
+    return undefined;
   }
 
-  getProbabilities(state: string, date: Date = new Date()): ElectoralProbabilities {
-    const dateKey = this.getLatestDateStringForState(state, date);
-    const d = !dateKey ? 0 : this.stateProbabilitiesJson[dateKey][state] ?? 0;
+  /**
+   * Retrieves the win probabilities for a given state on a given date.
+   * @param {string} state State to retrieve probabilities for.
+   * @param {DateString} date Date to retrieve probabilities for.
+   * @returns {StateProbabilities} `StateProbabilities` instance containing the
+   * win probabilities for the given state on the given date.
+   */
+  getStateProbabilities(state: string, date: DateString): StateProbabilities {
+    const latestDate = this.getLatestDateStringForState(state, date);
+    if (!latestDate) return new StateProbabilities(0, 100, undefined);
+
+    const d = !latestDate
+      ? 0
+      : this.getProbabilities(latestDate).states[state] ?? 0;
     const r = 100 - d;
-    return new ElectoralProbabilities(d, r);
+
+    return new StateProbabilities(d, r, latestDate);
   }
 
-  getDailyChange(state: string): DailyChange {
-    const latestDateString = this.getLatestDateStringForState(state);
-    if (!latestDateString) {
+  /**
+   * Retrieves all probability data for the given date.
+   * @param {DateString} date Date to retrieve probability data for.
+   * @returns {Probabilities} `Probabilities` instance containing all
+   * probability data for the given date.
+   */
+  getProbabilities(date: DateString): Probabilities {
+    return this.probabilities[date.toString()];
+  }
+
+  /**
+   * Retrieves the daily change data for the given state.
+   * @param {string} state State to get the daily change for.
+   * @param {DateString} date Date to get the daily change for.
+   * @returns {DailyChange} `DailyChange` instance representing the daily
+   * change.
+   */
+  getDailyChange(state: string, date: DateString): DailyChange {
+    const latestDate = this.getLatestDateStringForState(state, date);
+    if (!latestDate) {
       return { text: '' };
     }
 
-    const latestDate = dateStringToDate(latestDateString);
-    const latestProbs = this.getProbabilities(state, latestDate);
+    const latestProbability = this.getStateProbabilities(state, latestDate);
+    const previousDay = new DateString(
+      latestDate.asDate().getTime() - 24 * 60 * 60 * 1000
+    );
+    const latestPrevious = this.getLatestDateStringForState(state, previousDay);
 
-    const dateStrings = this.getAvailableDateStrings();
-    const previousDayDate = new Date(latestDate.getTime()); // Clone the date
-    previousDayDate.setUTCDate(previousDayDate.getUTCDate() - 1); // Subtract one day in UTC
-
-    const previousDayDateString = formatDateToYYYYMMDD(previousDayDate);
-    if (this.isStateAvailableForDate(state, previousDayDateString)) {
-      const prevDateString = dateStrings[dateStrings.indexOf(previousDayDateString)];
-      const prevDate = dateStringToDate(prevDateString);
-      const prevProbs = this.getProbabilities(state, prevDate);
-
-      const diff = latestProbs.getMargin() - prevProbs.getMargin();
+    if (latestPrevious && this.isStateAvailableForDate(state, latestPrevious)) {
+      const prevProbability = this.getStateProbabilities(state, latestPrevious);
+      const diff = latestProbability.democrat - prevProbability.democrat;
       const text = diff === 0 
         ? 'None'
         : diff > 0
@@ -171,89 +278,204 @@ export class ElectoralMapService {
         : diff > 0
           ? Party.Democrat
           : Party.Republican;
-      return { text, advantage };
+      return new DailyChange(text, advantage);
     } else {
-      return { text: '' };
+      return new DailyChange();
     }
   }
 
-  getTooltip(state: string, date: Date): string {
-    const data = this.getStateData(state, date);
+  /**
+   * Retrieves tooltip HTML for a state on a given date.
+   * @param {string} state State to get the tooltip for.
+   * @param {DateString} date Date to get the tooltip for.
+   * @returns {string} Tooltip HTML for the state.
+   */
+  getTooltip(state: string, date: DateString): string {
+    const latestDate = this.getLatestDateStringForState(state, date);
+    const data = this.getStateData(state, latestDate ?? date);
     const margin = data.probabilities.getMargin();
+    const demProbability = data.probabilities.democrat;
+    const repProbability = data.probabilities.republican;
 
     let ratingClass = 'tossup-text';
     if (data.rating !== StateRating.TossUp) {
-      ratingClass = margin > 0 ? 'd-text' : 'r-text';
+      ratingClass = margin > 0
+        ? 'd-text'
+        : 'r-text';
     }
 
-    const dateString = formatDateToYYYYMMDD(date, '-');
+    let tooltipHtml = `
+      <strong>${state}: ${data.evs || '??'} EVs</strong><br/>
+      <span class="rating-text ${ratingClass}">${data.rating}</span><br/>
+    `;
 
-    let tooltipHtml = `<strong>${state}: ${data.evs || '??'} EVs</strong><br/>`
-      + `<span class="rating-text ${ratingClass}">${data.rating}</span><br/>`;
-      + `<i>Last Updated: ${dateString}</i><br/>`
+    if (latestDate) {
+      tooltipHtml +=
+        `<i>Last Updated: ${latestDate.getValueWithSeparator('-')}</i><br/>`;
+    }
 
-    const dClass = margin > 0 && data.rating !== StateRating.TossUp ? 'winner' : '';
-    const rClass = margin < 0 && data.rating !== StateRating.TossUp ? 'winner' : '';
+    const dClass = margin > 0 && data.rating !== StateRating.TossUp
+      ? 'winner'
+      : '';
+    const rClass = margin < 0 && data.rating !== StateRating.TossUp
+      ? 'winner'
+      : '';
 
-    tooltipHtml += `<span class="${dClass} d-text">${this.getCandidate(Party.Democrat)}: ${data.probabilities.democrat}%</span><br/>`
-      + `<span class="${rClass} r-text">${this.getCandidate(Party.Republican)}: ${data.probabilities.republican}%</span><br/>`;
+    tooltipHtml += `
+      <span class="${dClass} d-text">
+        ${this.getCandidate(Party.Democrat)}: ${demProbability}%
+      </span><br/>
+      <span class="${rClass} r-text">
+        ${this.getCandidate(Party.Republican)}: ${repProbability}%
+      </span><br/>
+    `;
 
-    if (data.change?.text) {
+    const change = data.change;
+    if (change && change.text) {
       let changeClass = '';
       if (data.change?.advantage) {
-        changeClass = data.change?.advantage === Party.Democrat ? 'd-text' : 'r-text';
+        changeClass = change.advantage === Party.Democrat
+          ? 'd-text'
+          : 'r-text';
       }
-      tooltipHtml += `Change: <span class="${changeClass}">${data.change.text}</span><br/>`;
+      tooltipHtml += `
+        Change: <span class="${changeClass}">${change.text}</span><br/>
+      `;
     }
 
     return tooltipHtml;
   }
 
+  /**
+   * Retrieves the name of the candidate for a given party.
+   * @param {Party} party The party to get the candidate for.
+   * @returns {string} Name of the candidate for the given party.
+   */
   getCandidate(party: Party) {
-    const candidates = this.appService.getConfig().candidates;
+    const candidates = this.configService.getCandidates();
     return party === Party.Democrat
       ? candidates.democrat
       : candidates.republican;
   }
 
+  /**
+   * Retrieves the number of electoral votes (EVs) for a given state.
+   * @param {string} state State to retrieve EVs for.
+   * @returns {number} The number of EVs for the given state.
+   */
   getElectoralVotes(state: string): number {
-    return this.evsJson[state] ?? 0;
+    return this.evs[state] ?? 0;
   }
 
-  async getElectoralVotesJson(): Promise<Json<number>> {
-    const json = (await d3.json('assets/json/evs.json')) as Json<number>;
-    this.evsJson = json;
-    return json;
-  }
+  /**
+   * Retrieves color for a state on the given date based on its rating and map
+   * options.
+   * @param {string} state State to retrieve color for.
+   * @param {DateString} date Date to retrieve color for.
+   * @returns {string} Color for the state on the given date.
+   */
+  getColor(state: string, date: DateString): string {
+    const classification = this.getStateRating(state, date);
+    const mapColors = this.configService.getMapColors();
+    const mapOptions = this.electoralMapOptionsService.get();
+    const solidOnly = mapOptions.solidOnly;
+    const probabilities = this.getStateProbabilities(state, date);
+    const margin = probabilities.getMargin();
 
-  async getStateProbabilitiesJson(): Promise<Json<StateProbabilities>> {
-    const json = (await d3.json('assets/json/probabilities.json')) as Json<StateProbabilities>;
-    this.stateProbabilitiesJson = json;
-    return json;
-  }
-
-  getColor(state: string): string {
-    const classification = this.getStateRating(state);
-
-    switch (classification) {
-      case StateRating.SolidD:
-        return '#0033ff';
-      case StateRating.LikelyD:
-        return '#5274fa';
-      case StateRating.LeanD:
-        return '#9cafff';
-      case StateRating.TiltD:
-        return '#d2dafc';
-      case StateRating.SolidR:
-        return '#f5020f';
-      case StateRating.LikelyR:
-        return '#fc7980';
-      case StateRating.LeanR:
-        return '#fcaeb2';
-      case StateRating.TiltR:
-        return '#ffe3e8';
-      default:
-        return '#ffd857';
+    if (solidOnly) {
+      if (margin > 0) {
+        return mapColors.solidD;
+      } else if (margin < 0) {
+        return mapColors.solidR;
+      } else {
+        return mapColors.tossup;
+      }
+    } else {
+      switch (classification) {
+        case StateRating.SolidD:
+          return mapColors.solidD;
+        case StateRating.LikelyD:
+          return mapColors.likelyD;
+        case StateRating.LeanD:
+          return mapColors.leanD;
+        case StateRating.TiltD:
+          return mapColors.tiltD;
+        case StateRating.SolidR:
+          return mapColors.solidR;
+        case StateRating.LikelyR:
+          return mapColors.likelyR;
+        case StateRating.LeanR:
+          return mapColors.leanR;
+        case StateRating.TiltR:
+          return mapColors.tiltR;
+        default:
+          return mapColors.tossup;
+      }
     }
+  }
+
+  /**
+   * Loads electoral vote data.
+   * @returns {Promise<Json<number>>} Promise that resolves with the electoral
+   * votes JSON.
+   */
+  private async loadElectoralVotes(): Promise<Json<number>> {
+    const json = (await d3.json('assets/json/evs.json')) as Json<number>;
+    this.evs = json;
+    return json;
+  }
+
+  /**
+   * Loads probability data.
+   * @returns {Promise<Probabilities>} Promise that resolves with the
+   * probabilities JSON.
+   */
+  private async loadProbabilities(): Promise<Json<Probabilities>> {
+    const json = (
+      await d3.json('assets/json/probabilities.json')
+    ) as Json<ProbabilitiesJson>;
+
+    this.probabilities = Object.keys(json).reduce((result, dateString) => {
+      result[dateString] = {
+        electoralCollege: json[dateString].ElectoralCollege,
+        popularVote: json[dateString].PopularVote,
+        states: json[dateString].States,
+      };
+      return result;
+    }, {} as Record<string, Probabilities>);
+
+    return this.probabilities;
+  }
+
+  /**
+   * Loads the all relevant JSON data.
+   * @returns {Promise<void>} Promise that resolves when all JSON data is
+   * loaded.
+   */
+  private async loadJsonData(): Promise<void> {
+    await this.loadElectoralVotes();
+    await this.loadProbabilities();
+  }
+
+  /**
+   * Loads the GeoJSON data for all states.
+   * @returns {Promise<any>} Promise that resolves when all GeoJSON data is
+   * loaded with the data as the resolved value.
+   */
+  private loadGeoData(): Promise<any> { // TODO: type return value
+    const promises = stateGeoJsons.map(
+      state => d3.json(`assets/json/geo/${state}`)
+    );
+
+    return Promise.all(promises).then((data) => {
+      const allFeatures = data.flatMap((stateData: any) => { // TODO: type
+        return stateData.type === 'FeatureCollection'
+          ? stateData.features
+          : [stateData];
+      });
+
+      this.geoData = allFeatures;
+      return allFeatures;
+    });
   }
 }

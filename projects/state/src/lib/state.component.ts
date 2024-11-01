@@ -1,16 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'lib-state',
-  standalone: true,
-  imports: [],
-  template: `
-    <p>
-      state works!
-    </p>
-  `,
-  styles: ``
+  selector: 'app-state',
+  templateUrl: './state.component.html',
 })
-export class StateComponent {
+export class StateComponent implements OnInit {
+  ngOnInit(): void {
 
+  }
 }

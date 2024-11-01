@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CoreModule } from 'core';
-import { MapModule } from '../../../map/src/lib/map.module';
+import { MapModule } from 'map';
+import { StateModule } from 'state';
 import { AppComponent } from './app.component';
 
 @NgModule({
@@ -9,7 +10,8 @@ import { AppComponent } from './app.component';
   ],
   imports: [
     CoreModule,
-    MapModule
+    MapModule,
+    StateModule
   ],
   bootstrap: [AppComponent]
 })

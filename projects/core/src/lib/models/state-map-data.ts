@@ -7,7 +7,7 @@ import { DailyChange } from './daily-change';
 /**
  * State-level data for a specific date.
  */
-export class StateData {
+export class StateMapData {
   /**
    * The name of the state.
    */

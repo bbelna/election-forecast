@@ -1,0 +1,64 @@
+.d-ev {
+  color: blue;
+}
+
+.r-ev {
+  color: red;
+}
+
+.ev, .ev-probabilities, .pv-probabilities {
+  text-align: center;
+  font-size: 24px; /* Adjust as needed for .ev-probabilities */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px; /* Add spacing between elements */
+}
+
+.date-selector {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.separator {
+  display: inline-block;
+  margin: 0 10px; /* Adjust to control spacing around the separator */
+  font-weight: bold;
+}
+
+.separator-sm {
+  display: inline-block;
+  margin: 0 0px; /* Adjust to control spacing around the separator */
+  font-weight: bold;
+}
+
+.ev-probabilities {
+  font-size: 14px;
+}
+
+.pv-probabilities {
+  font-size: 14px;
+}
+
+.options-container {
+  margin-top: 1rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.options-container mat-checkbox {
+  margin-top: -12px;
+}
+
+.map-container {
+  text-align: center;
+  display: flex;
+  justify-content: center;
+  margin-top: -90px;
+}
+
+.em-component-container {
+  margin-top: 1rem;
+}

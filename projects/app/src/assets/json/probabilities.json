@@ -1,0 +1,129 @@
+{
+  "20241101": {
+    "PopularVote": 60,
+    "ElectoralCollege": 55,
+    "States": {
+      "Georgia": 51,
+      "North Carolina": 47,
+      "Nevada": 54,
+      "Arizona": 49,
+      "Minnesota": 69,
+      "Pennsylvania": 58,
+      "Wisconsin": 56,
+      "Michigan": 62,
+      "Florida": 45,
+      "Texas": 39,
+      "Ohio": 43,
+      "New Mexico": 65,
+      "Colorado": 60,
+      "Virginia": 67
+    }
+  },
+  "20241031": {
+    "PopularVote": 60,
+    "ElectoralCollege": 53,
+    "States": {
+      "Georgia": 49,
+      "North Carolina": 45,
+      "Nevada": 51,
+      "Arizona": 47,
+      "Minnesota": 67,
+      "Pennsylvania": 55,
+      "Wisconsin": 52,
+      "Michigan": 60,
+      "Florida": 43,
+      "Texas": 37,
+      "Ohio": 40,
+      "New Mexico": 63,
+      "Colorado": 59,
+      "Virginia": 65
+    }
+  },
+  "20241030": {
+    "States": {
+      "Georgia": 49,
+      "North Carolina": 45,
+      "Nevada": 51,
+      "Arizona": 47,
+      "Minnesota": 67,
+      "Pennsylvania": 55,
+      "Wisconsin": 52,
+      "Michigan": 60,
+      "Florida": 43,
+      "Texas": 37,
+      "Ohio": 40,
+      "New Mexico": 63,
+      "Colorado": 58,
+      "Virginia": 63
+    }
+  },
+  "20241029": {
+    "States": {
+      "Georgia": 49,
+      "North Carolina": 45,
+      "Nevada": 51,
+      "Arizona": 47,
+      "Minnesota": 67,
+      "Pennsylvania": 55,
+      "Wisconsin": 52,
+      "Michigan": 60,
+      "Florida": 43,
+      "Texas": 37,
+      "Ohio": 39,
+      "New Mexico": 63,
+      "Colorado": 58,
+      "Virginia": 63
+    }
+  },
+  "20241028": {
+    "States": {
+      "Georgia": 48,
+      "North Carolina": 44,
+      "Nevada": 49,
+      "Arizona": 46,
+      "Minnesota": 66,
+      "Pennsylvania": 54,
+      "Wisconsin": 51,
+      "Michigan": 59,
+      "Texas": 36,
+      "Florida": 42,
+      "Ohio": 39,
+      "New Mexico": 60,
+      "Colorado": 57,
+      "Virginia": 62
+    }
+  },
+  "20241027": {
+    "States": {
+      "California": 100,
+      "New York": 100,
+      "Illinois": 100,
+      "Massachusetts": 100,
+      "Maryland": 100,
+      "Maine": 100,
+      "Vermont": 100,
+      "Connecticut": 100,
+      "Rhode Island": 100,
+      "Washington": 100,
+      "Oregon": 100,
+      "New Jersey": 100,
+      "Delaware": 100,
+      "Hawaii": 100,
+      "New Hampshire": 100,
+      "New Mexico": 65,
+      "Colorado": 60,
+      "Virginia": 65,
+      "Georgia": 45,
+      "North Carolina": 44,
+      "Nevada": 49,
+      "Arizona": 46,
+      "Minnesota": 66,
+      "Pennsylvania": 54,
+      "Wisconsin": 51,
+      "Michigan": 59,
+      "Florida": 42,
+      "Texas": 38,
+      "Ohio": 38
+    }
+  }
+}

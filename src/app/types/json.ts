@@ -1,1 +1,0 @@
-export type Json<T = string> = { [key: string]: T };

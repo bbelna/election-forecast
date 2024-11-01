@@ -3,35 +3,35 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "electoral-map-project": {
+    "app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
           "style": "scss"
         }
       },
-      "root": "",
-      "sourceRoot": "src",
+      "root": "projects/app",
+      "sourceRoot": "projects/app/src",
       "prefix": "app",
       "architect": {
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/electoral-map-project",
-            "index": "src/index.html",
-            "browser": "src/main.ts",
+            "outputPath": "dist/app",
+            "index": "projects/app/src/index.html",
+            "browser": "projects/app/src/main.ts",
             "polyfills": [
               "zone.js"
             ],
-            "tsConfig": "tsconfig.app.json",
+            "tsConfig": "projects/app/tsconfig.app.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "src/favicon.ico",
-              "src/assets"
+              "projects/app/src/favicon.ico",
+              "projects/app/src/assets"
             ],
             "styles": [
+              "projects/app/src/styles.scss",
               "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.scss",
               "node_modules/leaflet/dist/leaflet.css"
             ],
             "scripts": []
@@ -64,10 +64,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "electoral-map-project:build:production"
+              "buildTarget": "app:build:production"
             },
             "development": {
-              "buildTarget": "electoral-map-project:build:development"
+              "buildTarget": "app:build:development"
             }
           },
           "defaultConfiguration": "development"
@@ -75,7 +75,7 @@
         "extract-i18n": {
           "builder": "@angular-devkit/build-angular:extract-i18n",
           "options": {
-            "buildTarget": "electoral-map-project:build"
+            "buildTarget": "app:build"
           }
         },
         "test": {
@@ -85,23 +85,121 @@
               "zone.js",
               "zone.js/testing"
             ],
-            "tsConfig": "tsconfig.spec.json",
+            "tsConfig": "projects/app/tsconfig.spec.json",
             "inlineStyleLanguage": "scss",
             "assets": [
-              "src/favicon.ico",
-              "src/assets"
+              "projects/app/src/favicon.ico",
+              "projects/app/src/assets"
             ],
             "styles": [
-              "@angular/material/prebuilt-themes/azure-blue.css",
-              "src/styles.scss"
+              "projects/app/src/styles.scss"
             ],
             "scripts": []
+          }
+        }
+      }
+    },
+    "map": {
+      "projectType": "library",
+      "root": "projects/map",
+      "sourceRoot": "projects/map/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/map/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/map/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/map/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/map/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "state": {
+      "projectType": "library",
+      "root": "projects/state",
+      "sourceRoot": "projects/state/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/state/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/state/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/state/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/state/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
+          }
+        }
+      }
+    },
+    "core": {
+      "projectType": "library",
+      "root": "projects/core",
+      "sourceRoot": "projects/core/src",
+      "prefix": "lib",
+      "architect": {
+        "build": {
+          "builder": "@angular-devkit/build-angular:ng-packagr",
+          "options": {
+            "project": "projects/core/ng-package.json"
+          },
+          "configurations": {
+            "production": {
+              "tsConfig": "projects/core/tsconfig.lib.prod.json"
+            },
+            "development": {
+              "tsConfig": "projects/core/tsconfig.lib.json"
+            }
+          },
+          "defaultConfiguration": "production"
+        },
+        "test": {
+          "builder": "@angular-devkit/build-angular:karma",
+          "options": {
+            "tsConfig": "projects/core/tsconfig.spec.json",
+            "polyfills": [
+              "zone.js",
+              "zone.js/testing"
+            ]
           }
         }
       }
     }
   },
   "cli": {
-    "analytics": false
+    "analytics": "24697365-2ce0-4811-bf79-3367412c5dec"
   }
 }

@@ -5,9 +5,7 @@ import {
   ConfigService,
   DateString,
   ElectoralVotes,
-  Json,
   Party,
-  Probabilities,
   StateMapData,
   StateDataKey,
   StateDataMap,
@@ -20,24 +18,9 @@ import { StateService } from 'state';
 @Injectable({ providedIn: 'root' })
 export class MapService {
   /**
-   * Electoral vote data.
-   */
-  protected evs: Json<number> = {};
-
-  /**
-   * Probability data.
-   */
-  protected probabilities: Json<Probabilities> = {};
-
-  /**
-   * State data cache.
-   */
-  protected stateMapData: StateDataMap = new Map();
-
-  /**
    * GeoJSON data for all states.
    */
-  protected geoData: any;
+  private geoData: any;
 
   constructor(
     private configService: ConfigService,
@@ -68,10 +51,10 @@ export class MapService {
    * current date.
    */
   getTotalElectoralVotes(date: DateString): ElectoralVotes {
-    const evConfig = this.configService.getElectoralVoteConfig();
-    const evStates = evConfig.evStates;
-    let evDem = evConfig.baseEvDem;
-    let evRep = evConfig.baseEvRep;
+    const evConfig = this.configService.getElectoralVoteConfig(),
+          evStates = evConfig.evStates;
+    let evDem = evConfig.baseEvDem,
+        evRep = evConfig.baseEvRep;
 
     for (const state of Object.keys(evStates)) {
       const stateData = this.getStateMapData(state, date);
@@ -96,16 +79,13 @@ export class MapService {
    * state on the given date.
    */
   getStateMapData(state: string, date: DateString): StateMapData {
-    const stateDataKey = new StateDataKey(state, date);
-    if (this.stateMapData.has(stateDataKey)) {
-      return this.stateMapData.get(stateDataKey)!;
-    }
-
-    const probabilities = this.stateService.getProbability(state, date);
-    const rating = this.stateService.getRating(state, date);
-    const change = this.stateService.getDailyChange(state, date);
-    const evs = this.stateService.getElectoralVotes(state);
-    const color = this.getColor(state, date);
+    const mapOptions = this.mapOptionsService.get(),
+          ratingOptions = mapOptions.toRatingOptions(),
+          rating = this.stateService.getRating(state, date, ratingOptions),
+          probabilities = this.stateService.getProbability(state, date),
+          change = this.stateService.getDailyChange(state, date),
+          evs = this.stateService.getElectoralVotes(state),
+          color = this.getColor(state, date);
 
     const stateMapData = new StateMapData(
       state,
@@ -117,8 +97,6 @@ export class MapService {
       color
     );
 
-    this.stateMapData.set(stateDataKey, stateMapData);
-
     return stateMapData;
   }
 
@@ -129,11 +107,11 @@ export class MapService {
    * @returns {string} Tooltip HTML for the state.
    */
   getTooltip(state: string, date: DateString): string {
-    const latestDate = this.stateService.getLatestDateString(state, date);
-    const data = this.getStateMapData(state, latestDate ?? date);
-    const margin = data.probabilities.getMargin();
-    const demProbability = data.probabilities.democrat;
-    const repProbability = data.probabilities.republican;
+    const latestDate = this.stateService.getLatestDateString(state, date),
+          data = this.getStateMapData(state, latestDate ?? date),
+          margin = data.probabilities.getMargin(),
+          demProbability = data.probabilities.democrat,
+          repProbability = data.probabilities.republican;
 
     let ratingClass = 'tossup-text';
     if (data.rating !== StateRating.TossUp) {
@@ -146,11 +124,6 @@ export class MapService {
       <strong>${state}: ${data.evs || '??'} EVs</strong><br/>
       <span class="rating-text ${ratingClass}">${data.rating}</span><br/>
     `;
-
-    if (latestDate) {
-      tooltipHtml +=
-        `<i>Last Updated: ${latestDate.getValueWithSeparator('-')}</i><br/>`;
-    }
 
     const dClass = margin > 0 && data.rating !== StateRating.TossUp
       ? 'winner'
@@ -204,12 +177,13 @@ export class MapService {
    * @returns {string} Color for the state on the given date.
    */
   getColor(state: string, date: DateString): string {
-    const classification = this.stateService.getRating(state, date);
-    const mapColors = this.configService.getMapColors();
-    const mapOptions = this.mapOptionsService.get();
-    const solidOnly = mapOptions.solidOnly;
-    const probabilities = this.stateService.getProbability(state, date);
-    const margin = probabilities.getMargin();
+    const mapOptions = this.mapOptionsService.get(),
+          ratingOptions = mapOptions.toRatingOptions(),
+          classification = this.stateService.getRating(state, date, ratingOptions),
+          mapColors = this.configService.getMapColors(),
+          solidOnly = mapOptions.solidOnly,
+          probabilities = this.stateService.getProbability(state, date),
+          margin = probabilities.getMargin();
 
     if (solidOnly) {
       if (margin > 0) {

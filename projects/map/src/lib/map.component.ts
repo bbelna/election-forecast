@@ -6,6 +6,7 @@ import { MatCheckboxChange } from '@angular/material/checkbox';
 import { ElectoralVotes, DateString, Probabilities, Candidates, ConfigService, MapOptions } from 'core';
 import { MapOptionsService } from './services/map-options.service';
 import { MapService } from './map.service';
+import { StateService } from 'state';
 
 @Component({
   selector: 'app-map',
@@ -25,9 +26,10 @@ export class MapComponent implements OnInit {
   private height: number = 600;
 
   constructor(
-    protected configService: ConfigService,
-    protected mapService: MapService,
-    protected mapOptionsService: MapOptionsService,
+    private configService: ConfigService,
+    private mapService: MapService,
+    private mapOptionsService: MapOptionsService,
+    private stateService: StateService,
   ) {
     this.electoralVotes = new ElectoralVotes();
     this.selectedDate = new DateString();
@@ -38,18 +40,17 @@ export class MapComponent implements OnInit {
 
   ngOnInit() {
     this.mapService.load().then(() => {
-      this.availableDates = this.mapService.getAvailableDateStrings();
+      this.availableDates = this.stateService.getDateStrings();
       this.selectedDate = this.availableDates[0];
       this.candidates = this.configService.getCandidates();
+
       this.createSvg();
       this.update();
     });
   }
 
   update(): void {
-    this.probabilities = this.mapService.getProbabilities(
-      this.selectedDate
-    );
+    this.probabilities = this.stateService.getProbabilities(this.selectedDate);
     this.updateMap();
   }
 
@@ -68,9 +69,7 @@ export class MapComponent implements OnInit {
   updateMap(): void {
     this.svg.selectAll('path').remove();
     this.drawMap(this.selectedDate);
-    this.electoralVotes = this.mapService.getTotalElectoralVotes(
-      this.selectedDate
-    );
+    this.electoralVotes = this.mapService.getTotalElectoralVotes(this.selectedDate);
   }
 
   private createSvg(): void {

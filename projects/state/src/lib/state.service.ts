@@ -49,11 +49,11 @@ export class StateService {
     date: DateString,
     options?: RatingOptions
   ): StateRating {
-    const probabilities = this.getProbability(state, date);
-    const margin = probabilities.getMargin();
-    const ratingMargins = this.configService.getRatingMargins();
-    const tilts = options?.tilts || true;
-    const tossups = options?.tossups || true;
+    const probabilities = this.getProbability(state, date),
+          margin = probabilities.getMargin(),
+          ratingMargins = this.configService.getRatingMargins(),
+          tilts = options?.tilts ?? true,
+          tossups = options?.tossups ?? true;
 
     if (margin >= ratingMargins.solid) {
       return StateRating.SolidD;
@@ -190,8 +190,8 @@ export class StateService {
       const text = diff === 0 
         ? 'None'
         : diff > 0
-          ? `D +${diff.toFixed(1)}%`
-          : `R +${-diff.toFixed(1)}%`;
+          ? `D +${diff.toFixed(0)}%`
+          : `R +${-diff.toFixed(0)}%`;
       const advantage = diff === 0
         ? undefined
         : diff > 0

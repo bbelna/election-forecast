@@ -1,4 +1,65 @@
 {
+  "20241105": {
+    "PopularVote": 65,
+    "ElectoralCollege": 56,
+    "States": {
+      "Georgia": 54,
+      "North Carolina": 48,
+      "Nevada": 54,
+      "Arizona": 49,
+      "Minnesota": 73,
+      "Pennsylvania": 60,
+      "Wisconsin": 58,
+      "Michigan": 65,
+      "Florida": 40,
+      "Texas": 30,
+      "Ohio": 45,
+      "New Mexico": 66,
+      "Colorado": 61,
+      "Virginia": 70,
+      "Iowa": 47
+    }
+  },
+  "20241103": {
+    "PopularVote": 62,
+    "ElectoralCollege": 55,
+    "States": {
+      "Georgia": 53,
+      "North Carolina": 47,
+      "Nevada": 54,
+      "Arizona": 49,
+      "Minnesota": 70,
+      "Pennsylvania": 59,
+      "Wisconsin": 57,
+      "Michigan": 63,
+      "Florida": 44,
+      "Texas": 39,
+      "Ohio": 44,
+      "New Mexico": 65,
+      "Colorado": 61,
+      "Virginia": 69
+    }
+  },
+  "20241102": {
+    "PopularVote": 60,
+    "ElectoralCollege": 56,
+    "States": {
+      "Georgia": 52,
+      "North Carolina": 47,
+      "Nevada": 54,
+      "Arizona": 49,
+      "Minnesota": 70,
+      "Pennsylvania": 56,
+      "Wisconsin": 55,
+      "Michigan": 61,
+      "Florida": 44,
+      "Texas": 38,
+      "Ohio": 42,
+      "New Mexico": 64,
+      "Colorado": 61,
+      "Virginia": 67
+    }
+  },
   "20241101": {
     "PopularVote": 60,
     "ElectoralCollege": 55,

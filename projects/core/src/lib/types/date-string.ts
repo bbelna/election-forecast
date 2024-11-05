@@ -58,11 +58,15 @@ export class DateString {
    * the instance's separator is used (the one provided in the constructor).
    * @param {string} separator Optional, defaults to this instance's separator.
    * Separator to use when concatenating the date.
+   * @param {boolean} pad Optional, defaults to `true`. Whether to pad the
+   * year, month, and date with zeroes (e.g. 2024-01-01 instead of (2024-1-1).
    * @returns {string} Date string formatted with separator.
    */
   getValueWithSeparator(separator?: string): string {
     if (!separator) separator = this.separator;
-    return this.split().join(separator);
+    return this.split()
+      .map(x => x.toString().padStart(2, '0'))
+      .join(separator);
   }
 
   /**

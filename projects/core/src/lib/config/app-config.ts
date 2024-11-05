@@ -28,14 +28,14 @@ export const appConfig: AppConfig = {
     }
   },
   mapColors: {
-    solidD: '#0033ff',
-    likelyD: '#5274fa',
-    leanD: '#9cafff',
-    tiltD: '#d2dafc',
-    solidR: '#f5020f',
-    likelyR: '#ff666e',
-    leanR: '#fcaeb2',
-    tiltR: '#ffcfd7',
-    tossup: '#ffc403',
+    solidD: '#0240f7',
+    likelyD: '#6679ff',
+    leanD: '#99a8ff',
+    tiltD: '#cdd8ff',
+    solidR: '#f50202',
+    likelyR: '#ff808a',
+    leanR: '#f8a3a7',
+    tiltR: '#fcd2d4',
+    tossup: '#FFC300',
   }
 };

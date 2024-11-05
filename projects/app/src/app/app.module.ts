@@ -3,6 +3,7 @@ import { CoreModule } from 'core';
 import { MapModule } from 'map';
 import { StateModule } from 'state';
 import { AppComponent } from './app.component';
+import { AppRoutingModule } from './app-routing.module';
 
 @NgModule({
   declarations: [
@@ -11,7 +12,8 @@ import { AppComponent } from './app.component';
   imports: [
     CoreModule,
     MapModule,
-    StateModule
+    StateModule,
+    AppRoutingModule,
   ],
   bootstrap: [AppComponent]
 })

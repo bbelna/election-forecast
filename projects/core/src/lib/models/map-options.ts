@@ -1,3 +1,5 @@
+import { RatingOptions } from '../../../../state/src/lib/models/rating-options';
+
 /**
  * User options for the map.
  */
@@ -34,5 +36,9 @@ export class MapOptions {
     this.tilts = tilts;
     this.tossups = tossups;
     this.solidOnly = solidOnly;
+  }
+
+  toRatingOptions(): RatingOptions {
+    return new RatingOptions(this.tilts, this.tossups);
   }
 }
